@@ -4,6 +4,20 @@
 # CPU only docker
 sudo docker run -it kaixhin/mxnet
 
+docker run -it 7a4af698d911
+
+
+
+
+
+
+
+
+
+
+
+
+
 install.packages("drat", repos="https://cran.rstudio.com")
 drat:::addRepo("dmlc")
 install.packages("mxnet")
