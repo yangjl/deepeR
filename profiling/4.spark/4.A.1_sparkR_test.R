@@ -1,4 +1,5 @@
 # Download Spark 1.4 from http://spark.apache.org/downloads.html
+# https://spark.apache.org/docs/latest/sparkr.html
 # 
 # Download the nyc flights dataset as a CSV from https://s3-us-west-2.amazonaws.com/sparkr-data/nycflights13.csv
 
@@ -10,7 +11,7 @@ sqlContext
 # Java ref type org.apache.spark.sql.SQLContext id 1
 
 # Load the flights CSV file using `read.df`. Note that we use the CSV reader Spark package here.
-flights <- read.df(sqlContext, "./nycflights13.csv", "com.databricks.spark.csv", header="true")
+flights <- read.df(sqlContext, "data/nycflights13.csv", "com.databricks.spark.csv", header="true")
 
 # Print the first few rows
 head(flights)
