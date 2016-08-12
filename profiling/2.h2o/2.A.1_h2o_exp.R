@@ -14,7 +14,7 @@ library(h2o)
 ## Setting Up and Connecting to a H2O Cluster
 ## Start a local cluster with 1GB RAM (default)
 ## By default, H2O starts a cluster using all available threads (8 in my case). 
-h2o.init(ip = "localhost", port = 54321, nthreads = 8, max_mem_size = '4g')
+h2o.init(ip = "localhost", port = 54321, nthreads = 8, max_mem_size = '64g')
 h2o.clusterInfo()
 
 ## Start a local cluster with 2GB RAM
