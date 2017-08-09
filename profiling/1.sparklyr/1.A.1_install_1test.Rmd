@@ -1,0 +1,47 @@
+---
+title: "R Notebook"
+output: html_notebook
+date: 08-09-2017
+---
+
+https://github.com/rstudio/sparklyr
+
+## Installation
+```{r}
+install.packages("dbplyr", repos = "https://cloud.r-project.org")
+install.packages("sparklyr")
+devtools::install_github("rstudio/sparklyr")
+
+library(sparklyr)
+spark_available_versions()
+spark_install(version = "2.2.0")
+```
+
+## Connecting to Spark
+
+`module load java`
+
+```{r}
+library(sparklyr)
+sc <- spark_connect(master = "local")
+```
+
+Using dplyr
+
+We can now use all of the available dplyr verbs against the tables within the cluster.
+
+We'll start by copying some datasets from R into the Spark cluster (note that you may need to install the nycflights13 and Lahman packages in order to execute this code):
+
+```{r}
+install.packages(c("nycflights13", "Lahman"))
+
+library(dplyr)
+iris_tbl <- copy_to(sc, iris)
+flights_tbl <- copy_to(sc, nycflights13::flights, "flights")
+batting_tbl <- copy_to(sc, Lahman::Batting, "batting")
+src_tbls(sc)
+```
+
+works fine, don't know how to get hte online feedbacks yet.
+
+
