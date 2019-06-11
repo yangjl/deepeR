@@ -43,13 +43,93 @@ imsub(im, x > 1000 & x <1100, y>1 & y<100) %>% plot
 an <- read.csv("data/Havelock_West/export-2019-06-11T02_47_41.367Z.csv")
 
 corn <- gsub("\"|grass.*", "", an$Label) 
+s1 <- unlist(strsplit(corn, split="geometry:"))[-1]
+s2 <- unlist(strsplit(s1, split="\\},\\{"))
+s3 <- gsub("\\[|\\]|\\{|\\}|\\,", "", s2)
 
+df <- as.data.frame(matrix(s3, ncol=4, byrow=TRUE))
+df$x1 <- as.numeric(gsub("y:.*|x:", "", df$V1))
+df$x2 <- as.numeric(gsub("y:.*|x:", "", df$V3))
+df$y1 <- as.numeric(gsub(".*y:", "", df$V1))
+df$y2 <- as.numeric(gsub(".*y:", "", df$V2))
+df <- df[order(df$x1, df$y1),]
 ```
+
+
 
 ```{r}
-R(im) %>% plot(main="Red channel along 10th row",type="l")
-RGBtoHSL(im) %>% plot
+i =2
+imsub(im, x > df$x1[i] & x < df$x2[i], y>df$y1[i] & y< df$y2[i]) %>% plot
+
 ```
+
+
+```{r}
+par(mfcol=c(4,5))
+par(mar=c(0, 0, 1.5, 0), xaxs='i', yaxs='i')
+for (i in 1:20) { 
+  img <- imsub(im, x > df$x1[i] & x < df$x2[i], y>df$y1[i] & y< df$y2[i])
+  img <- t(apply(img, 2, rev)) 
+  image(1:28, 1:28, img, col = gray((0:255)/255), xaxt = 'n', yaxt = 'n')
+}
+```
+
+
+
+### Setup the ML layers (cat or dog page 124)
+
+```{r}
+rm(list=ls())
+library(keras)
+
+model <- keras_model_sequential() %>%
+    layer_conv_2d(filters =32, kernel_size=c(3,3), activation="relu",
+                  input_shape = c(10, 10, 3)) %>% #height, width, and RGB
+    layer_max_pooling_2d(pool_size=c(2,2)) %>%
+    layer_conv_2d(filters =64, kernel_size=c(3,3), activation="relu") %>%
+    layer_max_pooling_2d(pool_size=c(2,2)) %>%
+    layer_flatten() %>%
+    layer_dense(units = 512, activation = 'relu') %>%
+    layer_dense(units = 2, activation = 'softmax')
+
+summary(model)
+```
+
+
+### Compile the Model
+
+```{r}
+model %>% compile(
+  optimizer = 'adam', 
+  loss = 'sparse_categorical_crossentropy',
+  metrics = c('accuracy')
+)
+```
+
+### Train the model
+
+```{r}
+model %>% fit(train_images, train_labels, epochs = 5)
+```
+
+### Evaluate accuracy
+
+```{r}
+score <- model %>% evaluate(test_images, test_labels)
+
+cat('Test loss:', score$loss, "\n")
+cat('Test accuracy:', score$acc, "\n")
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
