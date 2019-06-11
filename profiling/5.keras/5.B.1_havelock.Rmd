@@ -1,0 +1,57 @@
+---
+title: "Tutorial: Basic Classfication"
+output: html_notebook
+date: 06-10-2019
+---
+
+https://dahtah.github.io/imager/imager.html
+
+## Normalize path
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('../../')) 
+#library(tidyverse)
+```
+
+## Installation
+```{r}
+install.packages("imager")
+library(imager)
+```
+
+## Preprocess the data
+
+### Coordinates:
+CImg uses standard image coordinates: the origin is at the top left corner, with the x axis pointing right and the y axis pointing down. imager uses the same coordinate system, except the origin is now (1,1) and not (0,0) (the reason being that R indices start at 1 and not at 0). The number of pixels along the x axis is called the width, along the y axis it’s height, along the z axis it’s depth and finally the number of colour channels is called “spectrum”.
+
+```{r}
+file <- list.files("data/Havelock_West", pattern="JPG", full.names = TRUE)
+im <- load.image(file[1])
+dim(im) #5472 3648    1    3 => x,y,z (depth or time), c (color)
+
+plot(im)
+```
+
+### subsetting the image
+```{r}
+imsub(im, x > 1 & x <100, y>1 & y<100) %>% plot
+
+imsub(im, x > 1000 & x <1100, y>1 & y<100) %>% plot
+```
+
+```{r}
+an <- read.csv("data/Havelock_West/export-2019-06-11T02_47_41.367Z.csv")
+
+corn <- gsub("\"|grass.*", "", an$Label) 
+
+```
+
+```{r}
+R(im) %>% plot(main="Red channel along 10th row",type="l")
+RGBtoHSL(im) %>% plot
+```
+
+
+
+
+

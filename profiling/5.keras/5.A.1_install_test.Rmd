@@ -15,6 +15,7 @@ devtools::install_github("rstudio/tensorflow")
 library(keras)
 
 # conda install python==3.7
+# conda update anaconda
 install_keras()
 library("tensorflow")
 install_tensorflow(version = "nightly")
