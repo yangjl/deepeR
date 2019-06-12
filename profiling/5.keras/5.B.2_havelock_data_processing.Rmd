@@ -1,0 +1,316 @@
+---
+title: "Havelock Data preprocessing"
+output: html_notebook
+date: 06-12-2019
+---
+
+https://dahtah.github.io/imager/imager.html
+
+## Normalize path
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_knit$set(root.dir=normalizePath('../../')) 
+#library(tidyverse)
+```
+
+
+# Using the test data
+
+corn, grass and soil
+
+
+```{r}
+an <- read.csv("data/Havelock_West/export-2019-06-11T02_47_41.367Z.csv")
+
+
+
+
+corn <- gsub("\"|grass.*", "", an$Label) 
+s1 <- unlist(strsplit(corn, split="geometry:"))[-1]
+s2 <- unlist(strsplit(s1, split="\\},\\{"))
+s3 <- gsub("\\[|\\]|\\{|\\}|\\,", "", s2)
+
+df1 <- as.data.frame(matrix(s3, ncol=4, byrow=TRUE))
+df1$x1 <- as.numeric(gsub("y:.*|x:", "", df1$V1))
+df1$x2 <- as.numeric(gsub("y:.*|x:", "", df1$V3))
+df1$y1 <- as.numeric(gsub(".*y:", "", df1$V1))
+df1$y2 <- as.numeric(gsub(".*y:", "", df1$V2))
+df1 <- df1[order(df1$x1, df1$y1),]
+
+
+grass <- gsub("\"|soil.*", "", an$Label) 
+grass <- gsub(".*grass", "grass", grass)
+s1 <- unlist(strsplit(grass, split="geometry:"))[-1]
+s2 <- unlist(strsplit(s1, split="\\},\\{"))
+s3 <- gsub("\\[|\\]|\\{|\\}|\\,", "", s2)
+
+df2 <- as.data.frame(matrix(s3, ncol=4, byrow=TRUE))
+df2$x1 <- as.numeric(gsub("y:.*|x:", "", df2$V1))
+df2$x2 <- as.numeric(gsub("y:.*|x:", "", df2$V3))
+df2$y1 <- as.numeric(gsub(".*y:", "", df2$V1))
+df2$y2 <- as.numeric(gsub(".*y:", "", df2$V2))
+df2 <- df2[order(df2$x1, df2$y1),]
+
+soil <- gsub("\"", "", an$Label) 
+soil <- gsub(".*soil", "soil", soil)
+s1 <- unlist(strsplit(soil, split="geometry:"))[-1]
+s2 <- unlist(strsplit(s1, split="\\},\\{"))
+s3 <- gsub("\\[|\\]|\\{|\\}|\\,", "", s2)
+
+df3 <- as.data.frame(matrix(s3, ncol=4, byrow=TRUE))
+df3$x1 <- as.numeric(gsub("y:.*|x:", "", df3$V1))
+df3$x2 <- as.numeric(gsub("y:.*|x:", "", df3$V3))
+df3$y1 <- as.numeric(gsub(".*y:", "", df3$V1))
+df3$y2 <- as.numeric(gsub(".*y:", "", df3$V2))
+df3 <- df3[order(df3$x1, df3$y1),]
+
+
+```
+
+
+
+## chop data into 10x10 small images
+
+```{r}
+file <- list.files("data/Havelock_West", pattern="JPG", full.names = TRUE)
+im <- load.image(file[1])
+dim(im) #5472 3648    1    3 => x,y,z (depth or time), c (color)
+
+#plot(im)
+```
+
+
+
+```{r}
+library(imager)
+chopimg <- function(df=df1, path="data/test/corn/", im){
+    
+    ### change to nearest 10 values
+    df$x10 <- ceiling((df$x1-1)/10)*10+1
+    df$x20 <- floor((df$x2)/10)*10
+    df$y10 <- ceiling((df$y1-1)/10)*10+1
+    df$y20 <- floor((df$y2)/10)*10
+    
+    stat1 <- nrow(df) ## input annotations
+    df <- subset(df, x20 > x10 & y20 > y10)
+    stat2 <- nrow(df) ## useful annotations
+    message(sprintf("###>>> useful/input [%s / %s] annotations ...", stat1, stat2))
+    
+    df$pics <- -9
+    for(i in 1:nrow(df)){
+        
+        xs <- seq(from=df$x10[i], to=df$x20[i], by=10)
+        ys <- seq(from=df$y10[i], to=df$y20[i], by=10)
+        
+        gs <- data.frame(x=rep(xs, each=length(ys)), y=rep(ys, times=length(xs)))
+        
+        for(j in 1:nrow(gs)){
+            outfile=paste0(path,"/test_x", gs$x[j], "_y", gs$y[j], ".png")
+            #imsub(im, x > 1 & x <10, y>1 & y<10) %>% plot
+            save.image(imsub(im, x > gs$x[j] & x < (gs$x[j]+10), y > gs$y[j] & y < (gs$y[j]+10)), file=outfile)
+        }
+        df$pics[i] <- nrow(gs)
+    }
+    return(df)
+}
+
+t1 <- chopimg(df=df1, path="data/test/corn/", im)
+t2 <- chopimg(df=df2, path="data/test/grass/", im)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+base_dir <- "~/Downloads/cats_and_dogs_small"
+dir.create(base_dir)
+train_dir <- file.path(base_dir, "train")
+dir.create(train_dir)
+validation_dir <- file.path(base_dir, "validation")
+dir.create(validation_dir)
+test_dir <- file.path(base_dir, "test")
+dir.create(test_dir)
+train_cats_dir <- file.path(train_dir, "cats")
+dir.create(train_cats_dir)
+train_dogs_dir <- file.path(train_dir, "dogs")
+dir.create(train_dogs_dir)
+validation_cats_dir <- file.path(validation_dir, "cats")
+dir.create(validation_cats_dir)
+validation_dogs_dir <- file.path(validation_dir, "dogs")
+dir.create(validation_dogs_dir)
+test_cats_dir <- file.path(test_dir, "cats")
+dir.create(test_cats_dir)
+test_dogs_dir <- file.path(test_dir, "dogs")
+dir.create(test_dogs_dir)
+fnames <- paste0("cat.", 1:1000, ".jpg")
+file.copy(file.path(original_dataset_dir, fnames), 
+          file.path(train_cats_dir)) 
+fnames <- paste0("cat.", 1001:1500, ".jpg")
+file.copy(file.path(original_dataset_dir, fnames), 
+          file.path(validation_cats_dir))
+fnames <- paste0("cat.", 1501:2000, ".jpg")
+file.copy(file.path(original_dataset_dir, fnames),
+          file.path(test_cats_dir))
+fnames <- paste0("dog.", 1:1000, ".jpg")
+file.copy(file.path(original_dataset_dir, fnames),
+          file.path(train_dogs_dir))
+fnames <- paste0("dog.", 1001:1500, ".jpg")
+file.copy(file.path(original_dataset_dir, fnames),
+          file.path(validation_dogs_dir)) 
+fnames <- paste0("dog.", 1501:2000, ".jpg")
+file.copy(file.path(original_dataset_dir, fnames),
+          file.path(test_dogs_dir))
+```
+
+
+
+
+- Read the pic files
+- Decode the JPEG content to RBG grids of pixels
+- Convert these into floating point tensors
+- Rescale to 0-1
+
+
+
+
+
+
+
+
+## Installation
+```{r}
+install.packages("imager")
+library(imager)
+```
+
+## Preprocess the data
+
+### Coordinates:
+CImg uses standard image coordinates: the origin is at the top left corner, with the x axis pointing right and the y axis pointing down. imager uses the same coordinate system, except the origin is now (1,1) and not (0,0) (the reason being that R indices start at 1 and not at 0). The number of pixels along the x axis is called the width, along the y axis it’s height, along the z axis it’s depth and finally the number of colour channels is called “spectrum”.
+
+```{r}
+file <- list.files("data/Havelock_West", pattern="JPG", full.names = TRUE)
+im <- load.image(file[1])
+dim(im) #5472 3648    1    3 => x,y,z (depth or time), c (color)
+
+plot(im)
+```
+
+### subsetting the image
+```{r}
+imsub(im, x > 1 & x <10, y>1 & y<10) %>% plot
+
+imsub(im, x > 1000 & x <1100, y>1 & y<100) %>% plot
+```
+
+```{r}
+an <- read.csv("data/Havelock_West/export-2019-06-11T02_47_41.367Z.csv")
+
+corn <- gsub("\"|grass.*", "", an$Label) 
+s1 <- unlist(strsplit(corn, split="geometry:"))[-1]
+s2 <- unlist(strsplit(s1, split="\\},\\{"))
+s3 <- gsub("\\[|\\]|\\{|\\}|\\,", "", s2)
+
+df <- as.data.frame(matrix(s3, ncol=4, byrow=TRUE))
+df$x1 <- as.numeric(gsub("y:.*|x:", "", df$V1))
+df$x2 <- as.numeric(gsub("y:.*|x:", "", df$V3))
+df$y1 <- as.numeric(gsub(".*y:", "", df$V1))
+df$y2 <- as.numeric(gsub(".*y:", "", df$V2))
+df <- df[order(df$x1, df$y1),]
+```
+
+
+
+```{r}
+i =2
+imsub(im, x > df$x1[i] & x < df$x2[i], y>df$y1[i] & y< df$y2[i]) %>% plot
+
+```
+
+
+```{r}
+par(mfcol=c(4,5))
+par(mar=c(0, 0, 1.5, 0), xaxs='i', yaxs='i')
+for (i in 1:20) { 
+  img <- imsub(im, x > df$x1[i] & x < df$x2[i], y>df$y1[i] & y< df$y2[i])
+  img <- t(apply(img, 2, rev)) 
+  image(1:28, 1:28, img, col = gray((0:255)/255), xaxt = 'n', yaxt = 'n')
+}
+```
+
+
+
+### Setup the ML layers (cat or dog page 124)
+
+```{r}
+rm(list=ls())
+library(keras)
+
+model <- keras_model_sequential() %>%
+    layer_conv_2d(filters =32, kernel_size=c(3,3), activation="relu",
+                  input_shape = c(10, 10, 3)) %>% #height, width, and RGB
+    layer_max_pooling_2d(pool_size=c(2,2)) %>%
+    layer_conv_2d(filters =64, kernel_size=c(3,3), activation="relu") %>%
+    layer_max_pooling_2d(pool_size=c(2,2)) %>%
+    layer_flatten() %>%
+    layer_dense(units = 512, activation = 'relu') %>%
+    layer_dense(units = 2, activation = 'softmax')
+
+summary(model)
+```
+
+
+### Compile the Model
+
+```{r}
+model %>% compile(
+  optimizer = 'adam', 
+  loss = 'sparse_categorical_crossentropy',
+  metrics = c('accuracy')
+)
+```
+
+### Train the model
+
+```{r}
+model %>% fit(train_images, train_labels, epochs = 5)
+```
+
+### Evaluate accuracy
+
+```{r}
+score <- model %>% evaluate(test_images, test_labels)
+
+cat('Test loss:', score$loss, "\n")
+cat('Test accuracy:', score$acc, "\n")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

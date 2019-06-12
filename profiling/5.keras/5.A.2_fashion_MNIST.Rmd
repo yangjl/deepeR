@@ -4,6 +4,8 @@ output: html_notebook
 date: 06-10-2019
 ---
 
+https://github.com/jjallaire/deep-learning-with-r-notebooks
+
 https://keras.rstudio.com/articles/tutorial_basic_classification.html
 
 ## Installation
