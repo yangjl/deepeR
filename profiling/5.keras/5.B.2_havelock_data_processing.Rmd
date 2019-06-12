@@ -116,6 +116,8 @@ chopimg <- function(df=df1, path="data/test/corn/", im){
 
 t1 <- chopimg(df=df1, path="data/test/corn/", im)
 t2 <- chopimg(df=df2, path="data/test/grass/", im)
+t3 <- chopimg(df=df3, path="data/test/soil/", im)
+
 ```
 
 
