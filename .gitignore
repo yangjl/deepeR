@@ -1,3 +1,6 @@
 .Rproj.user
 .Rhistory
 .RData
+largedata/
+slurm-log/
+slurm-script/
