@@ -72,6 +72,7 @@ df3 <- df3[order(df3$x1, df3$y1),]
 ## chop data into 10x10 small images
 
 ```{r}
+library(imager)
 file <- list.files("data/Havelock_West", pattern="JPG", full.names = TRUE)
 im <- load.image(file[1])
 dim(im) #5472 3648    1    3 => x,y,z (depth or time), c (color)
@@ -82,7 +83,7 @@ dim(im) #5472 3648    1    3 => x,y,z (depth or time), c (color)
 
 
 ```{r}
-library(imager)
+
 chopimg <- function(df=df1, path="data/test/corn/", im){
     
     ### change to nearest 10 values
@@ -94,7 +95,7 @@ chopimg <- function(df=df1, path="data/test/corn/", im){
     stat1 <- nrow(df) ## input annotations
     df <- subset(df, x20 > x10 & y20 > y10)
     stat2 <- nrow(df) ## useful annotations
-    message(sprintf("###>>> useful/input [%s / %s] annotations ...", stat1, stat2))
+    message(sprintf("###>>> useful/input [%s / %s] annotations ...", stat2, stat1))
     
     df$pics <- -9
     for(i in 1:nrow(df)){
@@ -103,7 +104,8 @@ chopimg <- function(df=df1, path="data/test/corn/", im){
         ys <- seq(from=df$y10[i], to=df$y20[i], by=10)
         
         gs <- data.frame(x=rep(xs, each=length(ys)), y=rep(ys, times=length(xs)))
-        
+        message(sprintf("###>>> chopping [%s th] img into [%s] chunks ...", i, nrow(gs)))
+    
         for(j in 1:nrow(gs)){
             outfile=paste0(path,"/test_x", gs$x[j], "_y", gs$y[j], ".png")
             #imsub(im, x > 1 & x <10, y>1 & y<10) %>% plot
