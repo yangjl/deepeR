@@ -225,8 +225,8 @@ model %>% compile(
 ### Data Preprocessing
 
 ```{r}
-train_dir <- "largedata/dl2/train/"
-validation_dir <- "largedata/dl2/validation/"
+train_dir <- "largedata/dl1/train/"
+validation_dir <- "largedata/dl1/validation/"
 
 # All images will be rescaled by 1/255
 train_datagen <- image_data_generator(rescale = 1/255)
@@ -277,7 +277,7 @@ It is good practice to always save your models after training:
 
 ```{r}
 #model %>% save_model_hdf5("cache/grass_and_soil_small_1.h5")
-
+load()
 plot(history)
 ```
 
